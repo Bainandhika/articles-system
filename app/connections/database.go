@@ -37,11 +37,11 @@ func InitMySQL() (*gorm.DB, error) {
 	newLogger := logger.New(
 		log.New(file, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,     // Slow SQL threshold
+			SlowThreshold:             time.Second, // Slow SQL threshold
 			LogLevel:                  logger.Info, // Log level
-			IgnoreRecordNotFoundError: true,            // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,            // Don't include params in the SQL log
-			Colorful:                  false,           // Disable color
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,        // Don't include params in the SQL log
+			Colorful:                  false,       // Disable color
 		},
 	)
 
@@ -52,12 +52,6 @@ func InitMySQL() (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("%s error creating database connection: %v", domainFunc, err)
 	}
-
-	// create database if it doesn't exist
-	err = dbConn.Exec("CREATE DATABASE IF NOT EXISTS " + dbConfig.Name).Error
-    if err!= nil {
-        return nil, fmt.Errorf("%s error creating database: %v", domainFunc, err)
-    }
 
 	// Automatically migrate the schema to match the struct definitions
 	if err = dbConn.AutoMigrate(&models.Article{}); err != nil {
