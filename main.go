@@ -3,17 +3,25 @@ package main
 import (
 	"articles-system/app/configs"
 	"articles-system/app/connections"
-	"articles-system/app/logging"
 	"articles-system/app/delivery/routes"
+	"articles-system/app/logging"
 	"fmt"
+	"log"
 )
 
 func main() {
-	configs.InitConfig()
+	err := configs.InitConfig()
+	if err!= nil {
+        log.Fatalf("Error initializing configuration: %v", err)
+    }
 	appConfig := configs.Config.App
 
-	logConfig := logging.LoggerConfig{LogPath: appConfig.LogPath}
-	logConfig.InitLogger()
+	customLogger := logging.LoggerConfig{LogPath: appConfig.LogPath}
+	err = customLogger.InitLogger()
+	if err!= nil {
+        log.Fatalf("Error initializing logger: %v", err)
+    }
+	defer customLogger.Close()
 
 	dbConn, err := connections.InitMySQL()
 	if err!= nil {
