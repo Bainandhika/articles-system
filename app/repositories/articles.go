@@ -26,11 +26,9 @@ func (r *articlesRepo) Create(data models.Article) error {
 func (r *articlesRepo) GetArticles(query, author string) ([]models.Article, error) {
 	var articles []models.Article
 
-    if query != "" {
+    if query != "" || author != "" {
         query = "%" + query + "%"
-        r.db.Where("title LIKE ? OR body LIKE ?", query, query).Find(&articles)
-    } else if author != "" {
-        r.db.Where("author = ?", author).Find(&articles)
+        r.db.Where("title LIKE ? OR body LIKE ? OR author = ?", query, query, author).Find(&articles)
     } else {
         r.db.Find(&articles)
     }
