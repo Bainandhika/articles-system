@@ -10,7 +10,10 @@ type articlesRepo struct {
 	db *gorm.DB
 }
 
-type ArticlesRepo interface {}
+type ArticlesRepo interface {
+	Create(data models.Article) error
+	GetArticles(query, author string) ([]models.Article, error)
+}
 
 func NewArticlesRepo(db *gorm.DB) ArticlesRepo {
     return &articlesRepo{db: db}
