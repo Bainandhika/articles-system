@@ -74,23 +74,82 @@ func (s *articlesService) createKeyParent(query, author string) string {
 	} else if author != "" {
 		return fmt.Sprintf("articles:author:%s", author)
 	} else {
-		return "articles:all"
+		return ""
+	}
+}
+
+func (s *articlesService) setArticlesCache(keyParent string, articles []models.Article) {
+	domainFunc := "[ services.articlesService.serArticlesCache ]"
+
+	var filteredArticlesID []string
+	for _, article := range articles {
+		keyID := fmt.Sprintf("article:id:%d", article.ID)
+		articleJson, _ := json.Marshal(article)
+		err := s.redis.Set(context.Background(), keyID, articleJson, 8*time.Minute).Err()
+		if err != nil {
+			logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyParent, err)
+		}
+
+		if keyParent == "" {
+			filteredArticlesID = append(filteredArticlesID, keyID)
+		}
+	}
+
+	if len(filteredArticlesID) > 0 {
+		filteredArticlesIDJson, _ := json.Marshal(filteredArticlesID)
+		err := s.redis.Set(context.Background(), keyParent, filteredArticlesIDJson, 5*time.Minute).Err()
+		if err != nil {
+			logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyParent, err)
+		}
 	}
 }
 
 func (s *articlesService) getArticlesCache(keyParent string) ([]models.Article, error) {
 	domainFunc := "[ services.articlesService.getArticlesCache ]"
 
-	if keyParent == "articles:all" {
-		articlesJson, err := s.redis.Get(context.Background(), keyParent).Result()
-		if err != nil {
-			return nil, fmt.Errorf("%s error getting article cache [key: %s]: %v", domainFunc, keyParent, err)
+	if keyParent == "" {
+		var (
+			cursor uint64
+			keys   []string
+			err    error
+		)
+
+		for {
+			var scanKeys []string
+			scanKeys, cursor, err = s.redis.Scan(context.Background(), cursor, "*article:id*", 0).Result()
+			if err != nil {
+				return nil, fmt.Errorf("%s error scanning article cache [key: %s]: %v", domainFunc, keyParent, err)
+			}
+
+			keys = append(keys, scanKeys...)
+
+			if cursor == 0 {
+				break
+			}
 		}
 
 		var articles []models.Article
-		err = json.Unmarshal([]byte(articlesJson), &articles)
-		if err != nil {
-			return nil, fmt.Errorf("%s error unmarshalling article cache [key: %s]: %v", domainFunc, keyParent, err)
+		for i, keyID := range keys {
+			articleJson, err := s.redis.Get(context.Background(), keyID).Result()
+			if err != nil {
+				if i == len(keys)-1 {
+					return nil, fmt.Errorf("%s error getting article cache [key: %s]: %v", domainFunc, keyParent, err)
+				} else {
+					continue
+				}
+			}
+
+			var article models.Article
+			err = json.Unmarshal([]byte(articleJson), &articleJson)
+			if err != nil {
+				if i == len(keys)-1 {
+					return nil, fmt.Errorf("%s error unmarshalling article cache [key: %s]: %v", domainFunc, keyParent, err)
+				} else {
+					continue
+				}
+			}
+
+			articles = append(articles, article)
 		}
 
 		return articles, nil
@@ -108,52 +167,29 @@ func (s *articlesService) getArticlesCache(keyParent string) ([]models.Article, 
 	}
 
 	var articles []models.Article
-	for _, keyID := range articlesKeyID {
+	for i, keyID := range articlesKeyID {
 		articleJson, err := s.redis.Get(context.Background(), keyID).Result()
 		if err != nil {
-			return nil, fmt.Errorf("%s error getting article cache [key: %s]: %v", domainFunc, keyID, err)
+			if i == len(articlesKeyID)-1 {
+				return nil, fmt.Errorf("%s error getting article cache [key: %s]: %v", domainFunc, keyID, err)
+			} else {
+				continue
+			}
+
 		}
 
 		var article models.Article
 		err = json.Unmarshal([]byte(articleJson), &article)
 		if err != nil {
-			return nil, fmt.Errorf("%s error unmarshalling article cache [key: %s]: %v", domainFunc, keyID, err)
+			if i == len(articlesKeyID)-1 {
+				return nil, fmt.Errorf("%s error unmarshalling article cache [key: %s]: %v", domainFunc, keyID, err)
+			} else {
+				continue
+			}
 		}
 
 		articles = append(articles, article)
 	}
 
 	return articles, nil
-}
-
-func (s *articlesService) setArticlesCache(keyParent string, articles []models.Article) {
-	domainFunc := "[ services.articlesService.serArticlesCache ]"
-
-	if keyParent == "articles:all" {
-		articlesJson, _ := json.Marshal(articles)
-		err := s.redis.Set(context.Background(), keyParent, articlesJson, 6*time.Minute).Err()
-		if err != nil {
-			logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyParent, err)
-		}
-	} else {
-		var filteredArticlesID []string
-		for _, article := range articles {
-			keyID := fmt.Sprintf("article:%d", article.ID)
-			filteredArticlesID = append(filteredArticlesID, keyID)
-
-			articleJson, _ := json.Marshal(article)
-			err := s.redis.Set(context.Background(), keyID, articleJson, 6*time.Minute).Err()
-			if err != nil {
-				logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyID, err)
-			}
-		}
-
-		if len(filteredArticlesID) > 0 {
-			filteredArticlesIDJson, _ := json.Marshal(filteredArticlesID)
-			err := s.redis.Set(context.Background(), keyParent, filteredArticlesIDJson, 5*time.Minute).Err()
-			if err != nil {
-				logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyParent, err)
-			}
-		}
-	}
 }
