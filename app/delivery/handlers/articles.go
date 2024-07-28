@@ -70,12 +70,12 @@ func (h *ArticlesHandler) GetArticles(c *fiber.Ctx) error {
 
 	response := models.Response{
 		Code:    fiber.StatusOK,
-		Message: "Success",
-		Data:    "Article created successfully",
+		Message: "Article retrieved successfully",
+		Data:    articles,
 	}
 
-	logging.Info.Println(logDetail(queryParams, response, response.Data.(string)))
-	return c.JSON(models.Response{Code: fiber.StatusOK, Message: "Articles retrieved successfully", Data: articles})
+	logging.Info.Println(logDetail(queryParams, response, response.Message))
+	return c.JSON(response)
 }
 
 func logDetail(request, response any, message string) string {
