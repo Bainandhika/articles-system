@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/go-redis/redis/v8"
@@ -34,9 +35,9 @@ func (s *articlesService) Create(payload models.AddArticle) *fiber.Error {
 	domainFunc := "[ services.articles.Create ]"
 
 	articleData := models.Article{
-		Author: payload.Author,
-		Title:  payload.Title,
-		Body:   payload.Body,
+		Author:  payload.Author,
+		Title:   payload.Title,
+		Body:    payload.Body,
 		Created: time.Now(),
 	}
 
@@ -51,6 +52,7 @@ func (s *articlesService) Create(payload models.AddArticle) *fiber.Error {
 func (s *articlesService) GetArticles(queryParams models.GetArticles) ([]models.Article, *fiber.Error) {
 	domainFunc := "[ services.articles.GetArticles ]"
 
+	fromCache := true
 	keyParent := s.createKeyParent(queryParams.Query, queryParams.Author)
 	articles, err := s.getArticlesCache(keyParent)
 	if err != nil || articles == nil {
@@ -62,10 +64,15 @@ func (s *articlesService) GetArticles(queryParams models.GetArticles) ([]models.
 		if err != nil {
 			return nil, fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("%s error getting article: %v", domainFunc, err))
 		}
+		fromCache = false
 
 		if articles != nil {
 			go s.setArticlesCache(keyParent, articles)
 		}
+	}
+
+	if fromCache {
+		sort.Slice(articles, func(i, j int) bool { return articles[i].Created.After(articles[j].Created) })
 	}
 
 	return articles, nil
@@ -127,8 +134,8 @@ func (s *articlesService) getArticlesCache(keyParent string) ([]models.Article, 
 			}
 
 			if len(scanKeys) == 0 {
-                return nil, nil
-            }
+				return nil, nil
+			}
 
 			keys = append(keys, scanKeys...)
 
