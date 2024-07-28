@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"articles-system/app/handlers"
+	"articles-system/app/delivery/handlers"
 	"articles-system/app/repositories"
 	"articles-system/app/services"
 

@@ -4,7 +4,7 @@ import (
 	"articles-system/app/configs"
 	"articles-system/app/connections"
 	"articles-system/app/logging"
-	"articles-system/app/routes"
+	"articles-system/app/delivery/routes"
 	"fmt"
 )
 
