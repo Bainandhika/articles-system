@@ -53,6 +53,12 @@ func InitMySQL() (*gorm.DB, error) {
 		return nil, fmt.Errorf("%s error creating database connection: %v", domainFunc, err)
 	}
 
+	// create database if it doesn't exist
+	err = dbConn.Exec("CREATE DATABASE IF NOT EXISTS " + dbConfig.Name).Error
+    if err!= nil {
+        return nil, fmt.Errorf("%s error creating database: %v", domainFunc, err)
+    }
+
 	// Automatically migrate the schema to match the struct definitions
 	if err = dbConn.AutoMigrate(&models.Article{}); err != nil {
 		return nil, fmt.Errorf("%s error migrating database schema: %v", domainFunc, err)
