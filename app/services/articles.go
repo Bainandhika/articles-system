@@ -37,6 +37,7 @@ func (s *articlesService) Create(payload models.AddArticle) *fiber.Error {
 		Author: payload.Author,
 		Title:  payload.Title,
 		Body:   payload.Body,
+		Created: time.Now(),
 	}
 
 	err := s.repo.Create(articleData)

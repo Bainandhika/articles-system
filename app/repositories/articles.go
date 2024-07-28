@@ -28,12 +28,12 @@ func (r *articlesRepo) GetArticles(query, author string) ([]models.Article, erro
 
     if query != "" || author != "" {
         query = "%" + query + "%"
-        err := r.db.Where("title LIKE ? OR body LIKE ? OR author = ?", query, query, author).Find(&articles).Error
+        err := r.db.Where("title LIKE ? OR body LIKE ? OR author = ?", query, query, author).Order("created DESC").Find(&articles).Error
         if err!= nil {
             return nil, err
         }
     } else {
-        err := r.db.Find(&articles).Error
+        err := r.db.Order("created DESC").Find(&articles).Error
         if err!= nil {
             return nil, err
         }
