@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -28,10 +29,12 @@ func (l *LoggerConfig) createLogFile() error {
 	return nil
 }
 
-func (l *LoggerConfig) InitLogger() {
+func (l *LoggerConfig) InitLogger() error {
+	domainFunc := "[ logging.InitLogger ]"
+
 	err := l.createLogFile()
 	if err != nil {
-		log.Fatalln("Error create article-system log file: " + err.Error())
+		return fmt.Errorf("%s error creating log file: %v", domainFunc, err)
 	}
 
 	flag := log.LstdFlags | log.Llongfile
@@ -40,4 +43,18 @@ func (l *LoggerConfig) InitLogger() {
 	Error = log.New(file, "ERROR: ", flag)
 
 	Info.Printf("article-system new start!")
+
+	return err
+}
+
+func (l *LoggerConfig) Close() error {
+	domainFunc := "[ logging.Close ]"
+
+    err := file.Close()
+    if err != nil {
+        return fmt.Errorf("%s error closing log file %s: %v", domainFunc, fileName, err)
+    }
+
+	Info.Printf("%s log file %v closed", domainFunc, fileName)
+    return nil
 }
