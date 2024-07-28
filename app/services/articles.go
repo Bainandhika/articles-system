@@ -52,16 +52,20 @@ func (s *articlesService) GetArticles(queryParams models.GetArticles) ([]models.
 
 	keyParent := s.createKeyParent(queryParams.Query, queryParams.Author)
 	articles, err := s.getArticlesCache(keyParent)
-	if err != nil {
-		logging.Error.Printf("%s error getting article: %v", domainFunc, err)
+	if err != nil || articles == nil {
+		if err != nil {
+			logging.Error.Printf("%s error getting article: %v", domainFunc, err)
+		}
 
 		articles, err = s.repo.GetArticles(queryParams.Query, queryParams.Author)
 		if err != nil {
 			return nil, fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("%s error getting article: %v", domainFunc, err))
 		}
-	}
 
-	go s.setArticlesCache(keyParent, articles)
+		if articles != nil {
+			go s.setArticlesCache(keyParent, articles)
+		}
+	}
 
 	return articles, nil
 }
@@ -90,7 +94,7 @@ func (s *articlesService) setArticlesCache(keyParent string, articles []models.A
 			logging.Error.Printf("%s error setting article cache [key: %s]: %v", domainFunc, keyParent, err)
 		}
 
-		if keyParent == "" {
+		if keyParent != "" {
 			filteredArticlesID = append(filteredArticlesID, keyID)
 		}
 	}
@@ -121,6 +125,10 @@ func (s *articlesService) getArticlesCache(keyParent string) ([]models.Article, 
 				return nil, fmt.Errorf("%s error scanning article cache [key: %s]: %v", domainFunc, keyParent, err)
 			}
 
+			if len(scanKeys) == 0 {
+                return nil, nil
+            }
+
 			keys = append(keys, scanKeys...)
 
 			if cursor == 0 {
@@ -140,7 +148,7 @@ func (s *articlesService) getArticlesCache(keyParent string) ([]models.Article, 
 			}
 
 			var article models.Article
-			err = json.Unmarshal([]byte(articleJson), &articleJson)
+			err = json.Unmarshal([]byte(articleJson), &article)
 			if err != nil {
 				if i == len(keys)-1 {
 					return nil, fmt.Errorf("%s error unmarshalling article cache [key: %s]: %v", domainFunc, keyParent, err)
