@@ -1,0 +1,92 @@
+{
+	"info": {
+		"_postman_id": "9c622267-dd77-47ec-bb2c-604ca83b4eb6",
+		"name": "Articles System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "30425189"
+	},
+	"item": [
+		{
+			"name": "Create Article",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"author\": \"John Doe\",\r\n  \"title\": \"Sample Article 1\",\r\n  \"body\": \"This is the first sample article.\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{API_BASE_URL}}/articles",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"articles"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Articles",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{API_BASE_URL}}/articles?query=Sample&author=John",
+					"host": [
+						"{{API_BASE_URL}}"
+					],
+					"path": [
+						"articles"
+					],
+					"query": [
+						{
+							"key": "query",
+							"value": "Sample"
+						},
+						{
+							"key": "author",
+							"value": "John"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "API_BASE_URL",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	]
+}
