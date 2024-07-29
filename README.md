@@ -13,9 +13,11 @@ articles-system is a Golang web-API application that allows users to post articl
    ```bash
    git clone https://github.com/Bainandhika/articles-system
    cd articles-system
+   ```
 2. Install dependencies:
    ```bash
    go mod tidy
+   ```
 3. Prepare the .env file:
    Create a .env file in the project root directory with the following content:
    ```env
@@ -33,15 +35,26 @@ articles-system is a Golang web-API application that allows users to post articl
    REDIS_PORT=6379
    REDIS_USERNAME=
    REDIS_PASSWORD=
+   ```
 4. Build the executable:
    ```bash
    go build
+   ```
 5. Make sure MySQL and Redis are running and the database is already created. Then run the application:
    ```bash
    ./main
+   ```
+6. Log files stored at articles-system/logs
 
 ## Postman Collection
 You can find the collection at assets directory
+
+## Testing
+Use this command to run tests
+```bash
+go test ./testing/...
+```
+Log files from test stored at articles-system/testing/logs
 
 ## Author
 M. Bainandhika Baghaskara Putra - https://github.com/Bainandhika
