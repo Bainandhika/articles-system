@@ -5,6 +5,7 @@ import (
 	"articles-system/app/repositories"
 	"articles-system/app/services"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -13,7 +14,7 @@ import (
 func SetUpRouter(db *gorm.DB, redis *redis.Client) *fiber.App {
 	repo := repositories.NewArticlesRepo(db)
 	service := services.NewArticlesService(redis, repo)
-	handlers := handlers.NewArticlesHandler(service)
+	handlers := handlers.NewArticlesHandler(validator.New(), service)
 
 	router := fiber.New()
 	api := router.Group("/articles")

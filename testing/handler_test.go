@@ -13,33 +13,50 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreate(t *testing.T) {
-	customLogger, db, redis, app := SetupTestApp()
-	defer func() {
-		customLogger.Close()
-		db.Close()
-		redis.Close()
-	}()
+func TestCreate_ValidPayload(t *testing.T) {
+    customLogger, db, redis, app := SetupTestApp()
+    defer func() {
+        customLogger.Close()
+        db.Close()
+        redis.Close()
+    }()
 
-	payload := models.AddArticle{
-		Author: "John Doe",
-		Title:  "Sample Article 1",
-		Body:   "This is the first sample article.",
-	}
+    payload := models.AddArticle{
+        Author: "John Doe",
+        Title:  "Sample Article 1",
+        Body:   "This is the first sample article.",
+    }
 
-	payloadBytes, err := json.Marshal(payload)
-	assert.Nil(t, err, "Error marshalling payload")
+    testCreateArticle(t, app, payload, fiber.StatusOK)
+}
 
-	req := httptest.NewRequest(fiber.MethodPost, "/articles", bytes.NewReader(payloadBytes))
-	req.Header.Set("Content-Type", "application/json")
+func TestCreate_InvalidPayload(t *testing.T) {
+    customLogger, db, redis, app := SetupTestApp()
+    defer func() {
+        customLogger.Close()
+        db.Close()
+        redis.Close()
+    }()
 
-	resp, err := app.Test(req, -1)
-	if err != nil {
-		assert.Nil(t, err, "Test create article failed")
-		return
-	}
+    payload := models.AddArticle{}
 
-	assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+    testCreateArticle(t, app, payload, fiber.StatusBadRequest)
+}
+
+func testCreateArticle(t *testing.T, app *fiber.App, payload models.AddArticle, expectedStatus int) {
+    payloadBytes, err := json.Marshal(payload)
+    assert.Nil(t, err, "Error marshalling payload")
+
+    req := httptest.NewRequest(fiber.MethodPost, "/articles", bytes.NewReader(payloadBytes))
+    req.Header.Set("Content-Type", "application/json")
+
+    resp, err := app.Test(req, -1)
+    if err != nil {
+        assert.Nil(t, err, "Test create article failed")
+        return
+    }
+
+    assert.Equal(t, expectedStatus, resp.StatusCode)
 }
 
 func TestGetArticles(t *testing.T) {

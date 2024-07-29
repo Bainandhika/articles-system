@@ -6,15 +6,20 @@ import (
 	"articles-system/lib/models"
 	"encoding/json"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
 type ArticlesHandler struct {
-	service services.ArticlesService
+	validator *validator.Validate
+	service   services.ArticlesService
 }
 
-func NewArticlesHandler(service services.ArticlesService) *ArticlesHandler {
-	return &ArticlesHandler{service: service}
+func NewArticlesHandler(validator *validator.Validate, service services.ArticlesService) *ArticlesHandler {
+	return &ArticlesHandler{
+		validator: validator,
+		service:   service,
+	}
 }
 
 func (h *ArticlesHandler) Create(c *fiber.Ctx) error {
@@ -30,8 +35,17 @@ func (h *ArticlesHandler) Create(c *fiber.Ctx) error {
 		return c.Status(response.Code).JSON(response)
 	}
 
-	err := h.service.Create(payload)
-	if err != nil {
+	if err := h.validator.Struct(payload); err != nil {
+		response := models.Response{
+			Code:    fiber.StatusBadRequest,
+			Message: "Validation failed",
+		}
+
+		logging.Error.Println(logDetail(payload, response, err.Error()))
+		return c.Status(response.Code).JSON(response)
+	}
+
+	if err := h.service.Create(payload); err != nil {
 		response := models.Response{
 			Code:    fiber.StatusInternalServerError,
 			Message: fiber.ErrInternalServerError.Message,
