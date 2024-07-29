@@ -40,6 +40,9 @@ articles-system is a Golang web-API application that allows users to post articl
    ```bash
    ./main
 
+## Postman Collection
+You can find the collection at assets directory
+
 ## Author
 M. Bainandhika Baghaskara Putra - https://github.com/Bainandhika
   
