@@ -47,7 +47,7 @@ articles-system is a Golang web-API application that allows users to post articl
 6. Log files stored at articles-system/logs
 
 ## Postman Collection
-You can find the collection at assets directory
+You can find the collection at articles-system/assets
 
 ## Testing
 Use this command to run tests
